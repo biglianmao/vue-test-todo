@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title></title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="container">
+    <div class="row" style="margin-top:30px;">
+        <div class="col-md-9 col-md-offset-2" id="todoform">
+            <div class="row well">
+                <h3>输入代办事项</h3>
+                <div class="col-md-11 ">
+                    <input type="text" class="form-control" placeholder="请输入..." v-model="newmsg">
+                    <div class="" style="text-align:">
+                        <input type="radio" name="type" value="0" v-model="picked"> 重要
+                        <input type="radio" name="type" value="1" v-model="picked"> 紧急
+                        <input type="radio" name="type" value="2" v-model="picked"> 一般
+                        <input type="radio" name="type" value="3" v-model="picked"> 随便
+                    </div>
+                </div>
+                <div class="coo-md-1">
+                    <button type="button" class="btn btn-success " 　v-on:click="addNew">
+                        add!
+                    </button>
+                </div>
+            </div>
+
+
+            <div class="row well">
+                <h3>代办事项列表</h3>
+
+                <div class="form-inline">
+                    <div class="form-group">
+                        <div class="btn-toolbar" aria-label="wewerwer">
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button type="button" class="btn btn-danger" v-on:click="searchType(-1);searchStatus(-1);searchString='';searchStringReal='';">显示所有</button>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button type="button" class="btn btn-info" v-on:click="searchType(0)">重要</button>
+                                <button type="button" class="btn btn-info" v-on:click="searchType(1)">紧急</button>
+                                <button type="button" class="btn btn-info" v-on:click="searchType(2)">一般</button>
+                                <button type="button" class="btn btn-info" v-on:click="searchType(3)">随意</button>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button type="button" class="btn btn-info" v-on:click="searchStatus(0)">未完成</button>
+                                <button type="button" class="btn btn-info" v-on:click="searchStatus(1)">已完成</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group pull-right">
+                        <div class="input-group">
+                            <input type="text" class="form-control" v-model="searchString">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" v-on:click="searchItem">搜索</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
+
+                <div>
+                    <table class="table table-bordered ">
+                        <tr style="text-align: center;color:chocolate">
+                            <th style="width: 70%">事项</th>
+                            <th style="width: 10%">属性</th>
+                            <th style="width: 20%">操作</th>
+                        </tr>
+                        <tr v-for="(item, index) in items">
+                            <td style="width: 70%">
+                                <span class="text-primary" v-if="!item.status">{{item.msg}}</span>
+                                <span class="text-primary" v-else><del>{{item.msg}}</del></span>
+                            </td>
+                            <td style="width: 10%">{{typeTran(item.type)}}</td>
+                            <td style="width: 20%">
+                                <button type="button" v-on:click="delItem(itemsIndex[index])">del</button>
+                                <button type="button" v-on:click="compItem(itemsIndex[index])">com</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+    </div>
+</div>
+
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="js/vue.js"></script>
+
+<script>
+    var messageType = function (msg,type,status) {
+        this.msg = msg;
+        this.type = type;
+        this.status = status;
+    };
+
+    var STORAGE_KEY = 'todos'
+    var todoStorage = {
+        fetch: function () {
+            var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            return todos;
+        },
+        save: function (todos) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+    }
+
+    var example1 = new Vue({
+        el: '#todoform',
+        data: {
+            newmsg: '',
+            picked: 0,
+            searchString: '',
+            searchStringReal: '',
+            typeBtn:-1,
+            statusBtn:-1,
+            //items: [],
+            itemsIndex:[],
+            allItems:todoStorage.fetch()
+        },
+        computed:{
+            items: function () {
+                var temp = [];
+                this.itemsIndex = [];
+
+                //for(var item of this.allItems){   //ok
+                for(var i in this.allItems){
+                    item = this.allItems[i];
+                    if((this.typeBtn == -1 || this.typeBtn == item.type) && (this.statusBtn == -1 || this.statusBtn == item.status)) {
+
+                        //
+                        if(this.searchStringReal == '' || item.msg.indexOf(this.searchStringReal) != -1 ) {
+
+                            temp.push(item);
+                            this.itemsIndex.push(i);
+                            console.log(item);
+                        }
+                    }
+
+                }
+
+                //if(this.searchStringReal != '')
+                //    this.searchStringReal = '';
+
+                return temp;
+            }
+        },
+        watch: {
+            allItems: {
+                handler: function (items) {
+                    todoStorage.save(items)
+                },
+                deep: true
+            }
+        },
+
+        methods: {
+            addNew: function () {
+                console.log(this.newmsg);
+                if (this.newmsg == '') {
+                    return;
+                }
+                //var type = $("input[name='type']:checked").val();
+                //console.log('type='+type);
+                var newMessage = new messageType(this.newmsg,this.picked,0);
+                //this.items.push(this.newmsg);
+                this.allItems.push(newMessage);
+                //还原输入信息
+                this.newmsg = '';
+                return;
+            },
+
+            delItem: function (index) {
+                console.log(index);
+                this.allItems.splice(index, 1);
+            },
+
+            searchItem: function () {
+
+                console.log(this.searchString);
+                if (this.searchString == '') {
+                    return;
+                }
+                //searchType(-1);
+                //searchStatus(-1);
+                this.searchStringReal = this.searchString;
+                //this.searchString = '';
+                return;
+            },
+
+            compItem:function (index) {
+                console.log(index);
+                this.allItems[index].status = 1;
+            },
+
+            refreshView: function () {
+                return;
+            },
+
+            searchType: function (type) {
+                this.typeBtn = type;
+                return;
+            },
+
+            searchStatus: function (status) {
+                this.statusBtn = status;
+                return;
+            },
+
+            typeTran: function (type) {
+                const cntType = ['重要','紧急','一般','随便'];
+                return cntType[type];
+            }
+        }
+    })
+    var btnindex=0;
+    $('#btntest').on('click',function () {
+
+        $('input:radio').removeAttr('checked');
+        //$('input:radio').eq(btnindex).attr('checked', 'checked');
+        $('input:radio').eq(btnindex).prop('checked', 'checked');
+        console.log(btnindex);
+        btnindex  = (btnindex+1) % 4;
+    })
+</script>
+</body>
+</html>

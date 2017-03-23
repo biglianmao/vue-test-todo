@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<p>asdfasd</p>
+<script type="text/javascript">
+	//----------------------------------------
+//我们来写个闭包函数。实现个简单的记数器。
+//用两种方式：1、普通的匿名函数，2、吊炸天的箭头函数 =>
+//初始从 1 起步，步长就用 ++ 好了。 
+var init = 1;
+
+//这是一个闭包函数。 匿名函数写法
+var closure = function(n) {
+    //本例中内层函数是调用了外层函数的参数来实现的闭包。
+    //当然你也可以向往常那样在这一层里声明局部变量，给下面的内层函数用。
+    //var n = 100;
+    return function() {
+        return n++;
+    };
+}(5);
+
+//这是对应的箭头函数
+//var closure = (n => (() => n++))(init);
+
+//----------------------------------------
+// 下面我们跑个循环，测试下输出的效果,正常来说会看到 1到20 这些数字。
+var arr = [];
+for (var i = 0; i < 20; i++) {
+    arr.push(closure());
+}
+for (var n in arr)
+{
+
+    document.write(arr[n]);
+}
+</script>
+</body>
+</html>
